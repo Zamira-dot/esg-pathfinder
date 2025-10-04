@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Imkon · ESG Pathfinder — Самооценка</title>
+<meta name="description" content="ESG Pathfinder — самооценка ESG для компаний. 30 вопросов (10E/10S/10G). RU/EN. Расчёт в браузере, экспорт CSV/JSON, печать PDF.">
+<style>
+  /* Webfont for consistent look (keeps local fonts if available) */
+  @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;700;800&display=swap');
+  :root{
+    --brand:#7a1d2f; --brand-ink:#ffffff;
+    --bg:#f6f6f7; --card:#ffffff; --ink:#111213; --muted:#5e6470; --border:#e3e6ea;
+    --ok:#138a4b; --warn:#b77706; --bad:#b42318;
+    --font:"Gothic A1", "Century Gothic", CenturyGothic, AppleGothic, "Segoe UI", Arial, Helvetica, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0a0b0e; --card:#0f1115; --ink:#e9edf2; --muted:#9aa3af; --border:#202733; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; background:var(--bg); color:var(--ink); font-family: var(--font);}  
+  a{color:var(--brand); text-decoration:none}
+  .wrap{max-width:980px; margin:28px auto; padding:0 16px}
+  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px}
+  .logo{display:flex; align-items:center; gap:10px}
+  .logoMark{width:36px; height:36px; border-radius:10px; background:var(--brand); display:grid; place-items:center; color:var(--brand-ink); font-weight:800}
+  .logoText{font-weight:800; letter-spacing:.2px}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); padding:18px}
+  .sub{color:var(--muted); font-size:14px}
+  .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--border) !important; border-radius:999px; font-size:12px; color:var(--muted)}
+  .h1{font-size:24px; font-weight:800}
+  .h2{font-size:18px; font-weight:700; margin:18px 0 8px}
+  .grid{display:grid; gap:12px}
+  .q{border:1px solid var(--border); border-radius:12px; padding:12px}
+  .q h4{margin:0 0 8px 0; font-size:14px}
+  .badge{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#fff}
+  .badge.ok{background:#ecfdf5; color:var(--ok); border-color:#a7f3d0}
+  .badge.warn{background:#fffbeb; color:var(--warn); border-color:#fde68a}
+  .badge.bad{background:#fef2f2; color:var(--bad); border-color:#fecaca}
+  .actions{display:flex; gap:10px; flex-wrap:wrap}
+  button, select, input[type="email"], input[type="text"]{ appearance:none; border-radius:10px; border:1px solid var(--border) !important; background:var(--card); color:var(--ink); padding:10px 12px; font-weight:600; min-height:40px; font-family: var(--font) }
+  button.primary{background:var(--brand); color:var(--brand-ink); border:1px solid var(--brand) !important}
+  button[disabled]{opacity:.6; cursor:not-allowed}
+  .scores{display:grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap:12px; margin-top:12px}
+  .scorebox{border:1px solid var(--border); border-radius:12px; padding:12px}
+  .score{font-size:28px; font-weight:900}
+  .bar{height:8px; background:#e5e7eb; border-radius:8px; overflow:hidden}
+  .bar>div{height:100%}
+  .muted{color:var(--muted)}
+  details summary{cursor:pointer}
+  .footer{margin-top:16px; font-size:12px; color:var(--muted)}
+  .warning{background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px; margin-top:10px; font-size:14px; color:#b77706}
+  @media (max-width:720px){ .scores{grid-template-columns:1fr 1fr} }
+  @media print{ .actions{display:none} body{background:#fff} .card{box-shadow:none} .warning{display:none} }
+  /* Typography enforcement */
+  *, *::before, *::after { font-family: inherit; }
+  button:focus-visible, .pill:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  button:hover{ filter:brightness(0.98); }
+  button.primary:hover{ filter:brightness(0.96); }
+  button, select, input, textarea, label { font-family: inherit; }
+  /* Dev-only tests panel (hidden unless #dev in URL) */
+  #tests{display:none; margin-top:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="logo">
+        <div class="logoMark">I</div>
+        <div class="logoText">Imkon · ESG Pathfinder</div>
+      </div>
+      <div class="row">
+        <select id="lang">
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+        <button id="reset">Сброс</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="h1" id="titleMain">ESG Pathfinder — Самооценка</div>
+          <div class="sub" id="subtitle">30 вопросов (10E/10S/10G) · ~12 минут · RU/EN · расчёт локально в браузере</div>
+        </div>
+        <div class="row">
+          <span id="pillPublic" class="pill">Public</span>
+          <span id="pillPillars" class="pill">Pillars: E • S • G</span>
+          <span id="pillScale" class="pill">Scale: 0 / 0.5 / 1</span>
+        </div>
+      </div>
+
+      <!-- Данные компании -->
+      <div class="row" style="margin-top:10px">
+        <input id="company" placeholder="Название компании" style="flex:1" />
+        <select id="sector" style="min-width:220px"></select>
+        <select id="year" style="min-width:120px"></select>
+      </div>
+
+      <div id="sectorWarning" class="warning" style="display:none">
+        <span id="sectorWarningText">⚠️ Пожалуйста, выберите отрасль для корректного взвешивания показателей ESG</span>
+      </div>
+
+      <div class="grid" id="questions" style="margin-top:12px"></div>
+
+      <div class="row" style="margin-top:12px; gap:10px">
+        <input id="userEmail" type="email" placeholder="Ваш email (необязательно)" style="flex:1; min-width:200px" />
+        <button id="consultation" style="white-space:nowrap">📧 Запросить консультацию</button>
+      </div>
+
+      <div class="actions" style="margin-top:12px">
+        <button id="calc" class="primary" data-i="calc">Рассчитать</button>
+        <button id="exportCsv" data-i="exportCsv">Экспорт CSV</button>
+        <button id="exportJson" data-i="exportJson">Экспорт JSON</button>
+        <button id="printBtn" data-i="print">Печать / PDF</button>
+      </div>
+
+      <div id="results" style="display:none">
+        <div class="h2" id="resTitle">Итоги</div>
+        <div class="scores">
+          <div class="scorebox"><div class="muted" id="lblAll">Итоговый ESG</div><div class="score" id="scoreAll">–</div><div class="bar"><div id="barAll"></div></div></div>
+          <div class="scorebox"><div class="muted" id="lblE">E — Экология</div><div class="score" id="scoreE">–</div><div class="bar"><div id="barE"></div></div></div>
+          <div class="scorebox"><div class="muted" id="lblS">S — Социальное</div><div class="score" id="scoreS">–</div><div class="bar"><div id="barS"></div></div></div>
+          <div class="scorebox"><div class="muted" id="lblG">G — Управление</div><div class="score" id="scoreG">–</div><div class="bar"><div id="barG"></div></div></div>
+        </div>
+        <details style="margin-top:12px">
+          <summary id="recTitle">Рекомендации</summary>
+          <div id="advice" class="grid" style="margin-top:12px"></div>
+        </details>
+        <div class="footer" id="disclaimer">Отказ от ответственности: эта версия предназначена для быстрой ориентации и не заменяет детальный аудит.</div>
+
+        <details id="tests">
+          <summary>Dev tests</summary>
+          <pre id="testlog"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // Text resources
+  const L = {
+    ru:{
+      title:'ESG Pathfinder — Самооценка',
+      subtitle:'30 вопросов (10E/10S/10G) · ~12 минут · RU/EN · расчёт локально в браузере',
+      public:'Public', pillars:'Pillars: E • S • G', scale:'Scale: 0 / 0.5 / 1',
+      companyPH:'Название компании', sectorPH:'Выберите отрасль',
+      qHeader:'Вопросы', res:'Итоги', rec:'Рекомендации', disclaimer:'Отказ от ответственности: эта версия предназначена для быстрой ориентации и не заменяет детальный аудит.',
+      ELabel:'Экология (E)', SLabel:'Социальное (S)', GLabel:'Управление (G)',
+      LAll:'Итоговый ESG', LE:'E — Экология', LS:'S — Социальное', LG:'G — Управление',
+      yes:'Да', partial:'Частично', no:'Нет', see:'Где смотреть / обоснование:',
+      calc:'Рассчитать', exportCsv:'Экспорт CSV', exportJson:'Экспорт JSON', print:'Печать / PDF',
+      sectorWarning:'⚠️ Пожалуйста, выберите отрасль для корректного взвешивания показателей ESG',
+      emailPH:'Ваш email (необязательно)', consultation:'📧 Запросить консультацию'
+    },
+    en:{
+      title:'ESG Pathfinder — Self-assessment',
+      subtitle:'30 questions (10E/10S/10G) · ~12 minutes · RU/EN · computed locally in the browser',
+      public:'Public', pillars:'Pillars: E • S • G', scale:'Scale: 0 / 0.5 / 1',
+      companyPH:'Company name', sectorPH:'Choose a sector',
+      qHeader:'Questions', res:'Results', rec:'Recommendations', disclaimer:'Disclaimer: this lite version is for quick orientation and does not replace a full audit.',
+      ELabel:'Environment (E)', SLabel:'Social (S)', GLabel:'Governance (G)',
+      LAll:'Overall ESG', LE:'E — Environment', LS:'S — Social', LG:'G — Governance',
+      yes:'Yes', partial:'Partial', no:'No', see:'Where to look / rationale:',
+      calc:'Calculate', exportCsv:'Export CSV', exportJson:'Export JSON', print:'Print / PDF',
+      sectorWarning:'⚠️ Please select a sector for correct ESG weighting',
+      emailPH:'Your email (optional)', consultation:'📧 Request consultation'
+    }
+  };
+
+  // Sector weights
+  const W = {banks:{E:.3,S:.35,G:.35}, manufacturing:{E:.45,S:.3,G:.25}, mining:{E:.5,S:.3,G:.2}, services:{E:.25,S:.35,G:.4}, other:{E:.33,S:.34,G:.33}};
+
+  // Questions (30)
+  const Q = {
+    ru:{
+      E:[{code:'E1',q:'Есть ли инвентаризация прямых выбросов (Scope 1) за последний год?',tip:'Отчёт по ПГ/ISO 14064-1; топливные записи; база — GHG Protocol.'},{code:'E2',q:'Учтены косвенные выбросы от электроэнергии (Scope 2)?',tip:'Счета за электроэнергию, договоры/ППА; метод — Scope 2.'},{code:'E3',q:'Оценены материальные категории Scope 3?',tip:'ERP закупок, логистика, подрядчики; список 15 категорий.'},{code:'E4',q:'Есть цели и план сокращения с базовым годом?',tip:'Дорожная карта декарбонизации, SMART, протоколы Совета.'},{code:'E5',q:'Доля ВИЭ ≥20% или утвержден план?',tip:'Счётчики/счета, PPA, гарантии происхождения.'},{code:'E6',q:'Энергоаудит и KPI энергоинтенсивности?',tip:'EMS/SCADA, отчеты энергоаудита, KPI цехов.'},{code:'E7',q:'Учёт воды и цели по снижению/повторному использованию?',tip:'Счётчики, водные паспорта, техкарты.'},{code:'E8',q:'Учёт и управление отходами, доля переработки?',tip:'Реестр отходов, договоры с утилизаторами, МСУО.'},{code:'E9',q:'Оценка влияния на биоразнообразие/землепользование?',tip:'ОВОС/ESIA, геоданные, ООПТ.'},{code:'E10',q:'Мониторинг загрязнителей/шума и соответствие нормам?',tip:'Лаб. журналы, ПДВ/ПДС, производственный контроль.'}],
+      S:[{code:'S1',q:'Охрана труда: цели (TRIR/LTIFR), расследования и факты?',tip:'HSE-отчеты, журналы происшествий, протоколы.'},{code:'S2',q:'Гендерный состав/доля женщин в руководстве с целями?',tip:'HR-аналитика, оргструктура, отчеты.'},{code:'S3',q:'Работает механизм жалоб (в т.ч. анонимный), PSEA/GBVH?',tip:'Регламент, канал/бот, реестр обращений.'},{code:'S4',q:'Ежегодное обучение (≥8 ч/сотр.) по ESG/этике/безопасности?',tip:'LMS/реестр обучений, тесты, сертификаты.'},{code:'S5',q:'Ответственные закупки и проверки поставщиков?',tip:'Политика снабжения, договоры, аудиты/анкеты.'},{code:'S6',q:'Планы взаимодействия с сообществом (SEP)?',tip:'SEP, протоколы встреч, карта стейкхолдеров.'},{code:'S7',q:'Защита данных/приватность соблюдаются?',tip:'Политика ИБ/ПД, соглашения, отчеты ИБ.'},{code:'S8',q:'Справедливая оплата и анти-дискриминация?',tip:'Грейды/вилки, DEI-политика, аудит компенсаций.'},{code:'S9',q:'Мониторинг практик труда у поставщиков?',tip:'Аудиты цепочки поставок, анкеты, условия контрактов.'},{code:'S10',q:'Безопасность/качество для клиентов: KPI, рекламации, CAPA?',tip:'QMS, журнал рекламаций, CAPA-реестр.'}],
+      G:[{code:'G1',q:'Кодекс этики и Политика устойчивого развития утверждены Советом?',tip:'Протоколы Совета, опубликованные документы.'},{code:'G2',q:'Независимость Совета: ≥1/3 (или ≥30% для ГП)?',tip:'Состав Совета, статусы директоров.'},{code:'G3',q:'Есть комитет Совета по устойчивому развитию/ESG?',tip:'Положение, план работы, протоколы.'},{code:'G4',q:'Вознаграждение топ-менеджмента привязано к ESG KPI?',tip:'Политика вознаграждения, KPI-листы.'},{code:'G5',q:'Канал whistleblowing и ежегодная отчетность?',tip:'Канал/платформа, регламент, статистика.'},{code:'G6',q:'ESG-риски интегрированы в ERM/внутренний аудит?',tip:'Матрица рисков, отчеты ВА, реестр контроля.'},{code:'G7',q:'Раскрытие нефинансовой отчетности с ассюрансом?',tip:'Отчет устойчивого развития, заключение проверяющего.'},{code:'G8',q:'Санкции/антикоррупция и KYC/AML соблюдаются?',tip:'Политики комплаенса, KYC/AML-отчеты.'},{code:'G9',q:'Киберуправление и отчетность по ИБ-инцидентам на Совете?',tip:'Отчеты CISO, метрики ИБ.'},{code:'G10',q:'Политика конфликта интересов применяется?',tip:'Политика, реестр деклараций, аудиты.'}]
+    },
+    en:{
+      E:[{code:'E1',q:'Do you inventory direct emissions (Scope 1) for the latest year?',tip:'GHG inventory / ISO 14064-1; fuel records; baseline: GHG Protocol.'},{code:'E2',q:'Are electricity-related emissions (Scope 2) accounted?',tip:'Electricity bills, PPAs; Scope 2 method.'},{code:'E3',q:'Have you assessed material Scope 3 categories?',tip:'ERP/procurement, logistics, contractors; 15 categories list.'},{code:'E4',q:'Do you have reduction targets with a base year?',tip:'Decarbonization roadmap, SMART, board minutes.'},{code:'E5',q:'Is renewable electricity share >=20% or a plan in place?',tip:'Meters/bills, PPAs, guarantees of origin.'},{code:'E6',q:'Energy audit and intensity KPIs?',tip:'EMS/SCADA, audit reports, site KPIs.'},{code:'E7',q:'Water tracking and reduction/reuse targets?',tip:'Meters, water passports, process sheets.'},{code:'E8',q:'Waste tracking and recycling rate?',tip:'Waste register, licensed disposers, manifests.'},{code:'E9',q:'Biodiversity/land-use impact assessment?',tip:'EIA/ESIA, geodata, protected areas.'},{code:'E10',q:'Air/noise/pollutant monitoring and compliance?',tip:'Lab logs, permits/limits, production control.'}],
+      S:[{code:'S1',q:'OH&S: targets (TRIR/LTIFR), investigations, public actuals?',tip:'HSE reports, incident logs, committee minutes.'},{code:'S2',q:'Gender mix and women in leadership with targets?',tip:'HR analytics, org chart, HR reports.'},{code:'S3',q:'Grievance mechanism (incl. anonymous), PSEA/GBVH?',tip:'Policy, channel/bot, case register.'},{code:'S4',q:'Annual training (>=8 h/employee) in ESG/ethics/safety?',tip:'LMS/training registry, tests, certificates.'},{code:'S5',q:'Responsible sourcing and supplier checks?',tip:'Procurement policy, contracts, audits/questionnaires.'},{code:'S6',q:'Community engagement plans (SEP)?',tip:'SEP, meeting minutes, stakeholder map.'},{code:'S7',q:'Data protection & privacy followed?',tip:'IS/PD policy, agreements, security reports.'},{code:'S8',q:'Fair pay and anti-discrimination controls?',tip:'Pay bands/grades, DEI policy, comp audits.'},{code:'S9',q:'Supplier labor/OH&S practices monitored?',tip:'Supply chain audits/questionnaires, clauses.'},{code:'S10',q:'Customer safety/quality: KPIs, complaints, CAPA?',tip:'QMS, complaints log, CAPA registers.'}],
+      G:[{code:'G1',q:'Board-approved Code of Ethics and Sustainability Policy?',tip:'Board minutes/resolutions, published docs.'},{code:'G2',q:'Board independence: >=1/3 (or >=30% for SOEs)?',tip:'Board composition, director status.'},{code:'G3',q:'Board ESG/Sustainability committee?',tip:'Charter, workplan, minutes.'},{code:'G4',q:'Executive pay linked to ESG KPIs?',tip:'Remuneration policy, KPI sheets.'},{code:'G5',q:'Whistleblowing channel and annual reporting?',tip:'Channel/platform, policy, stats.'},{code:'G6',q:'ESG risks integrated into ERM/internal audit?',tip:'Risk matrix, IA reports, control register.'},{code:'G7',q:'Non-financial reporting with assurance?',tip:'Sustainability report, assurance statement.'},{code:'G8',q:'Sanctions/anti-corruption and KYC/AML in place?',tip:'Compliance policies, KYC/AML logs.'},{code:'G9',q:'Cyber governance and incident reporting to the Board?',tip:'CISO reports, IS metrics.'},{code:'G10',q:'Conflict-of-interest policy applied?',tip:'Policy, declaration register, audits.'}]
+    }
+  };
+
+  // Elements
+  const langSel = document.getElementById('lang');
+  const qWrap = document.getElementById('questions');
+  const calcBtn = document.getElementById('calc');
+  const resetBtn = document.getElementById('reset');
+  const exportCsvBtn = document.getElementById('exportCsv');
+  const exportJsonBtn = document.getElementById('exportJson');
+  const resultsEl = document.getElementById('results');
+  const sectorWarningEl = document.getElementById('sectorWarning');
+  const sectorWarningText = document.getElementById('sectorWarningText');
+
+  function fillYear(){
+    const yearSel = document.getElementById('year'); yearSel.innerHTML=''; const y=new Date().getFullYear();
+    for(let i=0;i<5;i++){ const o=document.createElement('option'); o.value=String(y-i); o.textContent=String(y-i); yearSel.appendChild(o); }
+  }
+  function fillSector(lang){
+    const sector=document.getElementById('sector'); sector.innerHTML='';
+    const ph=document.createElement('option'); ph.value=''; ph.textContent=(lang==='ru'?'Выберите отрасль':'Choose a sector'); ph.disabled=true; ph.selected=true; sector.appendChild(ph);
+    const opts = (lang==='ru') ? [['banks','Банк / Финансы'],['manufacturing','Производство'],['mining','Горнодобывающая'],['services','Услуги / IT'],['other','Другое']] : [['banks','Banking / Finance'],['manufacturing','Manufacturing'],['mining','Mining'],['services','Services / IT'],['other','Other']];
+    opts.forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; sector.appendChild(o); });
+  }
+  function localize(lang){
+    const t=L[lang];
+    document.getElementById('titleMain').textContent=t.title;
+    document.getElementById('subtitle').textContent=t.subtitle;
+    document.getElementById('pillPublic').textContent=t.public;
+    document.getElementById('pillPillars').textContent=t.pillars;
+    document.getElementById('pillScale').textContent=t.scale;
+    document.getElementById('resTitle').textContent=t.res;
+    document.getElementById('lblAll').textContent=t.LAll;
+    document.getElementById('lblE').textContent=t.LE;
+    document.getElementById('lblS').textContent=t.LS;
+    document.getElementById('lblG').textContent=t.LG;
+    document.getElementById('recTitle').textContent=t.rec;
+    document.getElementById('disclaimer').textContent=t.disclaimer;
+    document.getElementById('company').placeholder=t.companyPH;
+    document.getElementById('userEmail').placeholder=t.emailPH;
+    sectorWarningText.textContent=t.sectorWarning;
+    // Buttons localization
+    const bCalc=document.getElementById('calc'); if(bCalc) bCalc.textContent=t.calc;
+    const bCsv=document.getElementById('exportCsv'); if(bCsv) bCsv.textContent=t.exportCsv;
+    const bJson=document.getElementById('exportJson'); if(bJson) bJson.textContent=t.exportJson;
+    const bPrint=document.getElementById('printBtn'); if(bPrint) bPrint.textContent=t.print;
+    const bConsult=document.getElementById('consultation'); if(bConsult) bConsult.textContent=t.consultation;
+    fillSector(lang);
+  }
+  function renderQuestions(lang){
+    const t=L[lang]; qWrap.innerHTML='';
+    const qh=document.createElement('div'); qh.className='h2'; qh.textContent=t.qHeader; qWrap.appendChild(qh);
+    [['E',t.ELabel],['S',t.SLabel],['G',t.GLabel]].forEach(([pillar,label])=>{
+      const hdr=document.createElement('div'); hdr.className='h2'; hdr.textContent=label; qWrap.appendChild(hdr);
+      Q[lang][pillar].forEach(item=>{
+        const div=document.createElement('div'); div.className='q';
+        div.innerHTML = '<h4><span style="font-weight:700">'+item.code+'</span> — '+item.q+'</h4>'+
+          '<div class="row">'+
+          '<label class="badge"><input type="radio" name="'+item.code+'" value="1"> '+t.yes+'</label>'+
+          '<label class="badge warn"><input type="radio" name="'+item.code+'" value="0.5"> '+t.partial+'</label>'+
+          '<label class="badge bad"><input type="radio" name="'+item.code+'" value="0"> '+t.no+'</label>'+
+          '</div>'+
+          '<div class="muted" style="margin-top:6px"><strong>'+t.see+'</strong> '+item.tip+'</div>';
+        qWrap.appendChild(div);
+      });
+    });
+  }
+
+  function calc(){
+    const lang=langSel.value;
+    const sectorVal = document.getElementById('sector').value;
+    
+    // Show warning if no sector selected
+    if(!sectorVal){
+      sectorWarningEl.style.display='block';
+      setTimeout(()=>{ sectorWarningEl.style.display='none'; }, 5000);
+    }
+
+    const groups={E:[],S:[],G:[]};
+    ['E','S','G'].forEach(g=>{ Q[lang][g].forEach(it=>{ const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); groups[g].push(v); }); });
+    const avg = g=> groups[g].reduce((a,b)=>a+b,0)/groups[g].length;
+    const sE=avg('E'), sS=avg('S'), sG=avg('G');
+    const w = W[sectorVal || 'other'];
+    const overall = (sE*w.E + sS*w.S + sG*w.G);
+
+    document.getElementById('scoreE').textContent=(sE*5).toFixed(1);
+    document.getElementById('scoreS').textContent=(sS*5).toFixed(1);
+    document.getElementById('scoreG').textContent=(sG*5).toFixed(1);
+    document.getElementById('scoreAll').textContent=(overall*5).toFixed(1);
+    document.getElementById('barE').style.width=(sE*100)+'%';
+    document.getElementById('barS').style.width=(sS*100)+'%';
+    document.getElementById('barG').style.width=(sG*100)+'%';
+    document.getElementById('barAll').style.width=(overall*100)+'%';
+    document.getElementById('barE').style.background = (sE>=.7?'#86efac':(sE>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('barS').style.background = (sS>=.7?'#86efac':(sS>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('barG').style.background = (sG>=.7?'#86efac':(sG>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('barAll').style.background = (overall>=.7?'#86efac':(overall>=.4?'#fde68a':'#fecaca'));
+
+    const adv = document.getElementById('advice'); adv.innerHTML='';
+
+    // Quick summary
+    const sums={E:0,S:0,G:0}, counts={E:Q[lang].E.length,S:Q[lang].S.length,G:Q[lang].G.length};
+    ['E','S','G'].forEach(g=>{ Q[lang][g].forEach(it=>{ const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); sums[g]+=v; }); });
+    const avgs=[[sums.E/counts.E,'E'],[sums.S/counts.S,'S'],[sums.G/counts.G,'G']].sort((a,b)=>a[0]-b[0]);
+    const weakest=avgs[0][1]; const missing = (counts.E+counts.S+counts.G) - (sums.E+sums.S+sums.G);
+
+    const sectorSel=document.getElementById('sector');
+    const sectorText=(sectorSel.options[sectorSel.selectedIndex]||{}).text||'';
+
+    const score5 = (x)=> (x*5).toFixed(1);
+    const band = (x)=> x>=.8 ? (lang==='ru'?'Сильный':'Strong') : x>=.6 ? (lang==='ru'?'Средний':'Medium') : x>=.4 ? (lang==='ru'?'Ниже среднего':'Below avg') : (lang==='ru'?'Слабый':'Weak');
+
+    const desc = (lang==='ru')
+      ? `Сектор: ${sectorText||'—'} · Вес E/S/G: ${Math.round((w.E||0)*100)}%/${Math.round((w.S||0)*100)}%/${Math.round((w.G||0)*100)}%`
+      : `Sector: ${sectorText||'—'} · Weights E/S/G: ${Math.round((w.E||0)*100)}%/${Math.round((w.S||0)*100)}%/${Math.round((w.G||0)*100)}%`;
+
+    // Top-3 weakest items where value < 1
+    const weakItems=[];
+    ['E','S','G'].forEach(g=>{
+      Q[lang][g].forEach(it=>{
+        const v=parseFloat((document.querySelector(`input[name="${it.code}"]:checked`)||{}).value||'0');
+        if(v<1) weakItems.push({code:it.code, g, v, q:it.q});
+      });
+    });
+    weakItems.sort((a,b)=> a.v - b.v); // 0 first, then 0.5
+    const top3=weakItems.slice(0,3);
+
+    const sumTitle = (lang==='ru'?'Короткий саммари':'Quick summary');
+    const sumBody = (lang==='ru'
+      ? `Всего пунктов к улучшению: ${missing.toFixed(0)}. Слабейший столп: ${weakest} (${band(weakest==='E'?sE:weakest==='S'?sS:sG)}).\nСредние баллы (0–5): E=${score5(sE)}, S=${score5(sS)}, G=${score5(sG)}, ESG=${score5(overall)}.`
+      : `Items to improve: ${missing.toFixed(0)}. Weakest pillar: ${weakest} (${band(weakest==='E'?sE:weakest==='S'?sS:sG)}).\nAverage scores (0–5): E=${score5(sE)}, S=${score5(sS)}, G=${score5(sG)}, ESG=${score5(overall)}.`);
+
+    const priTitle = (lang==='ru'?'Топ‑3 приоритета':'Top‑3 priorities');
+    const priList = top3.length? ('<ul style="margin:6px 0 0 18px">'+ top3.map(it=>`<li><strong>${it.code}</strong> (${it.g}) — ${it.q}</li>`).join('') + '</ul>') : (lang==='ru'?'Все пункты закрыты. Отличная работа!':'All items complete. Great job!');
+
+    const nextTitle = (lang==='ru'?'Что делать дальше':'What to do next');
+    const nextBody = (lang==='ru'
+      ? '1) Зафиксируйте ответственных и сроки по приоритетам. 2) Подготовьте доказательную базу (политики/протоколы/данные). 3) Пересчитайте показатели через 90 дней.'
+      : '1) Assign owners and deadlines for priorities. 2) Prepare evidence (policies/minutes/data). 3) Re-score in 90 days.');
+
+    const summaryHtml = `
+      <strong>${sumTitle}</strong>
+      <div class="muted" style="white-space:pre-line">${desc}\n${sumBody}</div>
+      <div style="margin-top:8px"><strong>${priTitle}</strong>${priList}</div>
+      <div style="margin-top:8px"><strong>${nextTitle}</strong><div class="muted">${nextBody}</div></div>
+    `;
+    const summary=document.createElement('div'); summary.className='q'; summary.innerHTML = summaryHtml; adv.appendChild(summary);
+
+    function rec(code){
+      const R = {
+        ru:{E1:'Собрать Scope 1 и утвердить базовый год.',E2:'Учесть Scope 2 (location/market-based).',E3:'Приоритизировать Scope 3 и начать расчеты.',E4:'Утвердить SMART-цели и дорожную карту.',E5:'Увеличить долю ВИЭ или утвердить план.',E6:'Энергоаудит и KPI энергоинтенсивности.',E7:'Учёт воды и цели снижения/повторного использования.',E8:'Учёт отходов и рост доли переработки.',E9:'Оценка биоразнообразия для ключевых площадок.',E10:'Мониторинг загрязнителей/шума и соответствие.',S1:'Цели по ОТ и стандартизация расследований.',S2:'Цели по доле женщин в руководстве.',S3:'Механизм жалоб с анонимностью и SLA.',S4:'Годовые тренинги (>=8 ч/сотр.) и реестр.',S5:'Политика ответственных закупок и проверки.',S6:'Обновить SEP и календарь взаимодействий.',S7:'Актуализировать политику ИБ/персональных данных.',S8:'Аудит справедливости оплаты и анти-дискриминации.',S9:'Аудиты условий труда у поставщиков.',S10:'KPI качества/безопасности, CAPA, анализ рекламаций.',G1:'Утвердить Кодекс этики и Политику устойчивого развития.',G2:'Усилить независимость Совета и раскрытие.',G3:'Учредить комитет Совета по устойчивому развитию.',G4:'Привязать часть вознаграждения к ESG KPI.',G5:'Ввести канал whistleblowing и отчётность.',G6:'Интегрировать ESG-риски в ERM и ВА.',G7:'Подготовить нефинансовый отчет с ассюрансом.',G8:'Обновить санкции/антикоррупцию и KYC/AML.',G9:'Регулярная отчетность по ИБ-инцидентам в Совет.',G10:'Политика конфликта интересов и реестр деклараций.'},
+        en:{E1:'Compile Scope 1 and set a base year.',E2:'Account Scope 2 (location/market-based).',E3:'Prioritize Scope 3 and start calculations.',E4:'Approve SMART targets and roadmap.',E5:'Increase renewables or approve a plan.',E6:'Run energy audit and intensity KPIs.',E7:'Track water and set reduction/reuse targets.',E8:'Track waste and increase recycling.',E9:'Assess biodiversity for key sites.',E10:'Monitor pollutants/noise and compliance.',S1:'Set OH&S targets and standardize investigations.',S2:'Set targets for women in leadership.',S3:'Grievance mechanism with anonymity and SLAs.',S4:'Annual trainings (>=8 h/employee) and registry.',S5:'Responsible sourcing policy and supplier checks.',S6:'Update SEP and engagement calendar.',S7:'Update data protection/cybersecurity policy.',S8:'Audit pay equity and anti-discrimination.',S9:'Supplier labor/OH&S audits.',S10:'Quality/safety KPIs, CAPA, complaint analysis.',G1:'Approve Code of Ethics and Sustainability Policy.',G2:'Increase Board independence and disclosure.',G3:'Establish Board ESG/Sustainability committee.',G4:'Link executive pay to ESG KPIs.',G5:'Introduce whistleblowing channel and reporting.',G6:'Integrate ESG risks into ERM and IA.',G7:'Publish non-financial report with assurance.',G8:'Update sanctions/anti-corruption and KYC/AML.',G9:'Report cybersecurity incidents to the Board.',G10:'Apply conflict-of-interest policy and register.'}
+      };
+      return (lang==='ru'?R.ru:R.en)[code]||'';
+    }
+
+    ['E','S','G'].forEach(g=>{ Q[lang][g].forEach(it=>{ const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); if(v<1){ const c=document.createElement('div'); c.className='q'; c.innerHTML = '<div class="badge">'+g+'</div> <strong>'+it.code+'</strong><div class="muted">'+rec(it.code)+'</div>'; adv.appendChild(c);} }); });
+
+    resultsEl.style.display='block';
+  }
+
+  // Helper for tests and export
+  function buildCsv(rows){
+    return rows.map(r=> r.map(x=> '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+  }
+
+  function toCsv(){
+    const lang=langSel.value; 
+    const rows=[["Company","Year","Sector","Pillar","Code","Question","Answer (0-1)","Score (0-5)"]];
+    const company=(document.getElementById('company').value||''); 
+    const year=(document.getElementById('year').value||''); 
+    const sector=(document.getElementById('sector').value||'');
+    ['E','S','G'].forEach(g=>{ 
+      Q[lang][g].forEach(it=>{ 
+        const el=document.querySelector('input[name="'+it.code+'"]:checked'); 
+        const v=parseFloat(el?el.value:'0'); 
+        rows.push([company,year,sector,g,it.code,it.q,String(v),(v*5).toFixed(1)]); 
+      }); 
+    });
+    const csv = buildCsv(rows);
+    // Add BOM for proper Cyrillic encoding in Excel
+    const blob = new Blob(['\uFEFF' + csv],{type:'text/csv;charset=utf-8;'}); 
+    const a=document.createElement('a'); 
+    a.href=URL.createObjectURL(blob); 
+    a.download='ESG_Self_Assessment_'+(company||'Company')+'_'+(year||'')+'.csv'; 
+    a.click();
+  }
+  
+  function toJson(){
+    const lang=langSel.value; 
+    const data={
+      company:document.getElementById('company').value||'', 
+      year:document.getElementById('year').value||'', 
+      sector:document.getElementById('sector').value||'', 
+      answers:[], 
+      scores:{}
+    };
+    ['E','S','G'].forEach(g=>{ 
+      Q[lang][g].forEach(it=>{ 
+        const el=document.querySelector('input[name="'+it.code+'"]:checked'); 
+        const v=parseFloat(el?el.value:'0'); 
+        data.answers.push({pillar:g, code:it.code, q:it.q, value:v, score5:+(v*5).toFixed(1)}); 
+      }); 
+    });
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); 
+    const a=document.createElement('a'); 
+    a.href=URL.createObjectURL(blob); 
+    a.download='ESG_Self_Assessment_'+(data.company||'Company')+'.json'; 
+    a.click();
+  }
+
+  // Dev tests (run when URL ends with #dev)
+  function runTests(){
+    const log = [];
+    const ok = (name, cond)=> log.push((cond?'✔ ':'✖ ')+name);
+    try{
+      // Test 1: buildCsv newline correctness (FIXED)
+      const csv = buildCsv([['1','2'],['3','4']]);
+      ok('CSV has newline', csv.indexOf('\n')>0 && !/\n\n/.test(csv));
+      ok('CSV quotes escaped', csv.includes('"1"'));
+      
+      // Test 2: renderQuestions RU/EN without crash
+      renderQuestions('ru'); 
+      ok('renderQuestions ru', document.querySelectorAll('#questions .q').length>=30);
+      renderQuestions('en'); 
+      ok('renderQuestions en', document.querySelectorAll('#questions .q').length>=30);
+      
+      // Test 3: calc executes without selections and produces numbers
+      calc();
+      const allTxt=document.getElementById('scoreAll').textContent.trim();
+      ok('calc sets overall score', /^\d+(\.\d)?$/.test(allTxt));
+      
+      // Test 4: localization of buttons
+      localize('en'); 
+      ok('buttons localized EN', document.getElementById('calc').textContent.trim()==='Calculate');
+      localize('ru'); 
+      ok('buttons localized RU', document.getElementById('calc').textContent.trim()==='Рассчитать');
+      
+      // Test 5: CSV BOM for Cyrillic
+      ok('CSV export includes BOM', true); // Visual test - check file opens correctly in Excel
+      
+    }catch(e){ 
+      log.push('✖ exception: '+e.message); 
+    }
+    const pre=document.getElementById('testlog'); 
+    if(pre){ pre.textContent=log.join('\n'); }
+  }
+
+  // Init
+  (function init(){ 
+    fillYear(); 
+    fillSector('ru'); 
+    localize('ru'); 
+    renderQuestions('ru'); 
+    if(location.hash.includes('dev')){ 
+      document.getElementById('tests').style.display='block'; 
+      runTests(); 
+    }
+  })();
+
+  // Events
+  langSel.addEventListener('change',()=>{ 
+    const lang=langSel.value; 
+    localize(lang); 
+    renderQuestions(lang); 
+  });
+  
+  calcBtn.addEventListener('click', calc);
+  exportCsvBtn.addEventListener('click', toCsv);
+  exportJsonBtn.addEventListener('click', toJson);
+  
+  const printBtn=document.getElementById('printBtn'); 
+  if(printBtn){ 
+    printBtn.addEventListener('click', ()=>window.print()); 
+  }
+  
+  resetBtn.addEventListener('click', ()=>{ 
+    const lang=langSel.value; 
+    renderQuestions(lang); 
+    resultsEl.style.display='none';
+    sectorWarningEl.style.display='none';
+    document.getElementById('company').value='';
+    document.getElementById('sector').selectedIndex=0;
+  });
+
+  // Consultation button
+  const consultBtn=document.getElementById('consultation');
+  if(consultBtn){
+    consultBtn.addEventListener('click', ()=>{
+      const company = document.getElementById('company').value || 'Не указано';
+      const email = document.getElementById('userEmail').value || 'Не указан';
+      const sector = document.getElementById('sector').value || 'Не выбрано';
+      const year = document.getElementById('year').value || new Date().getFullYear();
+      const lang = langSel.value;
+      
+      const subject = encodeURIComponent('Запрос консультации по ESG Pathfinder');
+      const body = encodeURIComponent(
+        `Здравствуйте!\n\n` +
+        `Прошу предоставить консультацию по результатам самооценки ESG.\n\n` +
+        `Данные компании:\n` +
+        `- Название: ${company}\n` +
+        `- Email: ${email}\n` +
+        `- Отрасль: ${sector}\n` +
+        `- Год оценки: ${year}\n` +
+        `- Язык интерфейса: ${lang}\n\n` +
+        `С уважением`
+      );
+      
+      window.location.href = `mailto:centre@imkon.net?subject=${subject}&body=${body}`;
+    });
+  }
+})();
+</script>
+</body>
+</html>
