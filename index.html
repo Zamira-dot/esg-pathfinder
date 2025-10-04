@@ -720,24 +720,33 @@
     weakItems.sort((a,b)=> a.v - b.v);
     const top3=weakItems.slice(0,3);
 
-    const sumTitle = (lang==='ru'?'Короткий саммари':'Quick summary');
+    const sumTitle = (lang==='ru'?'Общая оценка':'Overall assessment');
+    const maturityLevel = overall>=0.8 ? (lang==='ru'?'Высокий уровень зрелости':'High maturity level') : 
+                         overall>=0.6 ? (lang==='ru'?'Средний уровень зрелости':'Medium maturity level') : 
+                         overall>=0.4 ? (lang==='ru'?'Развивающаяся практика':'Developing practice') : 
+                         (lang==='ru'?'Начальный уровень':'Initial level');
+    
     const sumBody = (lang==='ru'
-      ? `Всего пунктов к улучшению: ${missing.toFixed(0)}. Слабейший столп: ${weakest} (${band(weakest==='E'?sE:weakest==='S'?sS:sG)}).\nСредние баллы (0–5): E=${score5(sE)}, S=${score5(sS)}, G=${score5(sG)}, ESG=${score5(overall)}.`
-      : `Items to improve: ${missing.toFixed(0)}. Weakest pillar: ${weakest} (${band(weakest==='E'?sE:weakest==='S'?sS:sG)}).\nAverage scores (0–5): E=${score5(sE)}, S=${score5(sS)}, G=${score5(sG)}, ESG=${score5(overall)}.`);
+      ? `Ваш общий балл ESG: <strong>${score5(overall)}/5.0</strong> (${maturityLevel})\n` +
+        `Сектор: ${sectorText||'—'} · Веса E/S/G: ${Math.round((w.E||0)*100)}%/${Math.round((w.S||0)*100)}%/${Math.round((w.G||0)*100)}%\n\n` +
+        `Баллы по столпам: E=${score5(sE)}, S=${score5(sS)}, G=${score5(sG)}\n` +
+        `Слабейший столп: ${weakest} (${band(weakest==='E'?sE:weakest==='S'?sS:sG)})\n` +
+        `Всего пунктов к улучшению: ${missing.toFixed(0)} из 30`
+      : `Your overall ESG score: <strong>${score5(overall)}/5.0</strong> (${maturityLevel})\n` +
+        `Sector: ${sectorText||'—'} · Weights E/S/G: ${Math.round((w.E||0)*100)}%/${Math.round((w.S||0)*100)}%/${Math.round((w.G||0)*100)}%\n\n` +
+        `Scores by pillar: E=${score5(sE)}, S=${score5(sS)}, G=${score5(sG)}\n` +
+        `Weakest pillar: ${weakest} (${band(weakest==='E'?sE:weakest==='S'?sS:sG)})\n` +
+        `Items to improve: ${missing.toFixed(0)} out of 30`);
 
-    const priTitle = (lang==='ru'?'Топ‑3 приоритета':'Top‑3 priorities');
-    const priList = top3.length? ('<ul style="margin:6px 0 0 18px">'+ top3.map(it=>`<li><strong>${it.code}</strong> (${it.g}) — ${it.q}</li>`).join('') + '</ul>') : (lang==='ru'?'Все пункты закрыты. Отличная работа!':'All items complete. Great job!');
-
-    const nextTitle = (lang==='ru'?'Что делать дальше':'What to do next');
+    const nextTitle = (lang==='ru'?'Следующие шаги':'Next steps');
     const nextBody = (lang==='ru'
-      ? '1) Зафиксируйте ответственных и сроки по приоритетам. 2) Подготовьте доказательную базу (политики/протоколы/данные). 3) Пересчитайте показатели через 90 дней.'
-      : '1) Assign owners and deadlines for priorities. 2) Prepare evidence (policies/minutes/data). 3) Re-score in 90 days.');
+      ? 'Сосредоточьтесь на слабейшем столпе (<strong>'+weakest+'</strong>). Назначьте ответственных и сроки. Подготовьте доказательную базу (политики, протоколы, данные). Пересчитайте показатели через 90 дней.'
+      : 'Focus on the weakest pillar (<strong>'+weakest+'</strong>). Assign owners and deadlines. Prepare evidence (policies, minutes, data). Re-score in 90 days.');
 
     const summaryHtml = `
       <strong>${sumTitle}</strong>
-      <div class="esg-muted" style="white-space:pre-line">${desc}\n${sumBody}</div>
-      <div style="margin-top:8px"><strong>${priTitle}</strong>${priList}</div>
-      <div style="margin-top:8px"><strong>${nextTitle}</strong><div class="esg-muted">${nextBody}</div></div>
+      <div class="esg-muted" style="white-space:pre-line">${sumBody}</div>
+      <div style="margin-top:12px"><strong>${nextTitle}</strong><div class="esg-muted">${nextBody}</div></div>
     `;
     const summary=document.createElement('div'); 
     summary.className='esg-q'; 
