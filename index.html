@@ -1,180 +1,482 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Imkon · ESG Pathfinder — Самооценка</title>
-<meta name="description" content="ESG Pathfinder — самооценка ESG для компаний. 30 вопросов (10E/10S/10G). RU/EN. Расчёт в браузере, экспорт CSV/JSON, печать PDF.">
+<!-- ESG Pathfinder - Универсальная версия для встраивания -->
+<!-- Просто скопируйте весь этот код и вставьте в HTML-редактор вашей админ-панели -->
+
 <style>
-  /* Webfont for consistent look (keeps local fonts if available) */
+  /* Webfont for consistent look */
   @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;700;800&display=swap');
-  :root{
-    --brand:#7a1d2f; --brand-ink:#ffffff;
-    --bg:#f6f6f7; --card:#ffffff; --ink:#111213; --muted:#5e6470; --border:#e3e6ea;
-    --ok:#138a4b; --warn:#b77706; --bad:#b42318;
+  
+  .esg-container {
+    --brand:#7a1d2f; 
+    --brand-ink:#ffffff;
+    --bg:#f6f6f7; 
+    --card:#ffffff; 
+    --ink:#111213; 
+    --muted:#5e6470; 
+    --border:#e3e6ea;
+    --ok:#138a4b; 
+    --warn:#b77706; 
+    --bad:#b42318;
     --font:"Gothic A1", "Century Gothic", CenturyGothic, AppleGothic, "Segoe UI", Arial, Helvetica, sans-serif;
+    font-family: var(--font);
+    max-width: 980px;
+    margin: 28px auto;
+    padding: 0 16px;
   }
+  
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#0a0b0e; --card:#0f1115; --ink:#e9edf2; --muted:#9aa3af; --border:#202733; }
+    .esg-container { 
+      --bg:#0a0b0e; 
+      --card:#0f1115; 
+      --ink:#e9edf2; 
+      --muted:#9aa3af; 
+      --border:#202733; 
+    }
   }
-  *{box-sizing:border-box}
-  html,body{margin:0; background:var(--bg); color:var(--ink); font-family: var(--font);}  
-  a{color:var(--brand); text-decoration:none}
-  .wrap{max-width:980px; margin:28px auto; padding:0 16px}
-  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px}
-  .logo{display:flex; align-items:center; gap:10px}
-  .logoMark{width:36px; height:36px; border-radius:10px; background:var(--brand); display:grid; place-items:center; color:var(--brand-ink); font-weight:800}
-  .logoText{font-weight:800; letter-spacing:.2px}
-  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); padding:18px}
-  .sub{color:var(--muted); font-size:14px}
-  .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
-  .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--border) !important; border-radius:999px; font-size:12px; color:var(--muted)}
-  .h1{font-size:24px; font-weight:800}
-  .h2{font-size:18px; font-weight:700; margin:18px 0 8px}
-  .grid{display:grid; gap:12px}
-  .q{border:1px solid var(--border); border-radius:12px; padding:12px}
-  .q h4{margin:0 0 8px 0; font-size:14px}
-  .badge{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#fff}
-  .badge.ok{background:#ecfdf5; color:var(--ok); border-color:#a7f3d0}
-  .badge.warn{background:#fffbeb; color:var(--warn); border-color:#fde68a}
-  .badge.bad{background:#fef2f2; color:var(--bad); border-color:#fecaca}
-  .actions{display:flex; gap:10px; flex-wrap:wrap}
-  button, select, input[type="email"], input[type="text"]{ appearance:none; border-radius:10px; border:1px solid var(--border) !important; background:var(--card); color:var(--ink); padding:10px 12px; font-weight:600; min-height:40px; font-family: var(--font) }
-  button.primary{background:var(--brand); color:var(--brand-ink); border:1px solid var(--brand) !important}
-  button[disabled]{opacity:.6; cursor:not-allowed}
-  .scores{display:grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap:12px; margin-top:12px}
-  .scorebox{border:1px solid var(--border); border-radius:12px; padding:12px}
-  .score{font-size:28px; font-weight:900}
-  .bar{height:8px; background:#e5e7eb; border-radius:8px; overflow:hidden}
-  .bar>div{height:100%}
-  .muted{color:var(--muted)}
-  details summary{cursor:pointer}
-  .footer{margin-top:16px; font-size:12px; color:var(--muted)}
-  .warning{background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px; margin-top:10px; font-size:14px; color:#b77706}
-  @media (max-width:720px){ .scores{grid-template-columns:1fr 1fr} }
-  @media print{ .actions{display:none} body{background:#fff} .card{box-shadow:none} .warning{display:none} }
-  /* Typography enforcement */
-  *, *::before, *::after { font-family: inherit; }
-  button:focus-visible, .pill:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  button:hover{ filter:brightness(0.98); }
-  button.primary:hover{ filter:brightness(0.96); }
-  button, select, input, textarea, label { font-family: inherit; }
-  /* Dev-only tests panel (hidden unless #dev in URL) */
-  #tests{display:none; margin-top:12px}
+  
+  .esg-container * {
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  
+  .esg-header {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    gap: 12px; 
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .esg-logo {
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+  }
+  
+  .esg-logo-mark {
+    width: 36px; 
+    height: 36px; 
+    border-radius: 10px; 
+    background: var(--brand); 
+    display: grid; 
+    place-items: center; 
+    color: var(--brand-ink); 
+    font-weight: 800;
+  }
+  
+  .esg-logo-text {
+    font-weight: 800; 
+    letter-spacing: .2px;
+    color: var(--ink);
+  }
+  
+  .esg-card {
+    background: var(--card); 
+    border: 1px solid var(--border); 
+    border-radius: 16px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,.06); 
+    padding: 18px;
+  }
+  
+  .esg-sub {
+    color: var(--muted); 
+    font-size: 14px;
+  }
+  
+  .esg-row {
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    align-items: center;
+  }
+  
+  .esg-pill {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 8px; 
+    padding: 6px 10px; 
+    border: 1px solid var(--border); 
+    border-radius: 999px; 
+    font-size: 12px; 
+    color: var(--muted);
+  }
+  
+  .esg-h1 {
+    font-size: 24px; 
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+  }
+  
+  .esg-h2 {
+    font-size: 18px; 
+    font-weight: 700; 
+    margin: 18px 0 8px;
+    color: var(--ink);
+  }
+  
+  .esg-grid {
+    display: grid; 
+    gap: 12px;
+  }
+  
+  .esg-q {
+    border: 1px solid var(--border); 
+    border-radius: 12px; 
+    padding: 12px;
+  }
+  
+  .esg-q h4 {
+    margin: 0 0 8px 0; 
+    font-size: 14px;
+    color: var(--ink);
+  }
+  
+  .esg-badge {
+    padding: 2px 8px; 
+    border-radius: 999px; 
+    font-size: 12px; 
+    border: 1px solid var(--border); 
+    background: #fff;
+    cursor: pointer;
+  }
+  
+  .esg-badge.ok {
+    background: #ecfdf5; 
+    color: var(--ok); 
+    border-color: #a7f3d0;
+  }
+  
+  .esg-badge.warn {
+    background: #fffbeb; 
+    color: var(--warn); 
+    border-color: #fde68a;
+  }
+  
+  .esg-badge.bad {
+    background: #fef2f2; 
+    color: var(--bad); 
+    border-color: #fecaca;
+  }
+  
+  .esg-actions {
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap;
+  }
+  
+  .esg-container button, 
+  .esg-container select, 
+  .esg-container input[type="email"], 
+  .esg-container input[type="text"] {
+    appearance: none; 
+    border-radius: 10px; 
+    border: 1px solid var(--border); 
+    background: var(--card); 
+    color: var(--ink); 
+    padding: 10px 12px; 
+    font-weight: 600; 
+    min-height: 40px; 
+    font-family: inherit;
+  }
+  
+  .esg-container button.primary {
+    background: var(--brand); 
+    color: var(--brand-ink); 
+    border: 1px solid var(--brand);
+  }
+  
+  .esg-container button:hover {
+    filter: brightness(0.98);
+    cursor: pointer;
+  }
+  
+  .esg-container button.primary:hover {
+    filter: brightness(0.96);
+  }
+  
+  .esg-scores {
+    display: grid; 
+    grid-template-columns: repeat(4, minmax(120px,1fr)); 
+    gap: 12px; 
+    margin-top: 12px;
+  }
+  
+  .esg-scorebox {
+    border: 1px solid var(--border); 
+    border-radius: 12px; 
+    padding: 12px;
+  }
+  
+  .esg-score {
+    font-size: 28px; 
+    font-weight: 900;
+    color: var(--ink);
+  }
+  
+  .esg-bar {
+    height: 8px; 
+    background: #e5e7eb; 
+    border-radius: 8px; 
+    overflow: hidden;
+  }
+  
+  .esg-bar > div {
+    height: 100%;
+  }
+  
+  .esg-muted {
+    color: var(--muted);
+  }
+  
+  .esg-warning {
+    background: #fffbeb; 
+    border: 1px solid #fde68a; 
+    border-radius: 8px; 
+    padding: 10px; 
+    margin-top: 10px; 
+    font-size: 14px; 
+    color: #b77706;
+  }
+  
+  .esg-footer {
+    margin-top: 16px; 
+    font-size: 12px; 
+    color: var(--muted);
+  }
+  
+  .esg-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .esg-modal.show {
+    display: flex;
+  }
+  
+  .esg-modal-content {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  
+  .esg-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .esg-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .esg-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0;
+    min-height: auto;
+  }
+  
+  .esg-modal-body {
+    margin-bottom: 20px;
+  }
+  
+  .esg-modal-body textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    background: var(--card);
+    color: var(--ink);
+  }
+  
+  .esg-copy-btn {
+    background: var(--brand);
+    color: var(--brand-ink);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .esg-copy-btn.copied {
+    background: var(--ok);
+  }
+  
+  @media (max-width: 720px) {
+    .esg-scores {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  
+  @media print {
+    .esg-actions {
+      display: none;
+    }
+    .esg-warning {
+      display: none;
+    }
+    .esg-modal {
+      display: none;
+    }
+  }
 </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="header">
-      <div class="logo">
-        <div class="logoMark">I</div>
-        <div class="logoText">Imkon · ESG Pathfinder</div>
-      </div>
-      <div class="row">
-        <select id="lang">
-          <option value="ru">Русский</option>
-          <option value="en">English</option>
-        </select>
-        <button id="reset">Сброс</button>
-      </div>
+
+<div class="esg-container">
+  <div class="esg-header">
+    <div class="esg-logo">
+      <div class="esg-logo-mark">I</div>
+      <div class="esg-logo-text">Imkon · ESG Pathfinder</div>
     </div>
-
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div class="h1" id="titleMain">ESG Pathfinder — Самооценка</div>
-          <div class="sub" id="subtitle">30 вопросов (10E/10S/10G) · ~12 минут · RU/EN · расчёт локально в браузере</div>
-        </div>
-        <div class="row">
-          <span id="pillPublic" class="pill">Public</span>
-          <span id="pillPillars" class="pill">Pillars: E • S • G</span>
-          <span id="pillScale" class="pill">Scale: 0 / 0.5 / 1</span>
-        </div>
-      </div>
-
-      <!-- Данные компании -->
-      <div class="row" style="margin-top:10px">
-        <input id="company" placeholder="Название компании" style="flex:1" />
-        <select id="sector" style="min-width:220px"></select>
-        <select id="year" style="min-width:120px"></select>
-      </div>
-
-      <div id="sectorWarning" class="warning" style="display:none">
-        <span id="sectorWarningText">⚠️ Пожалуйста, выберите отрасль для корректного взвешивания показателей ESG</span>
-      </div>
-
-      <div class="grid" id="questions" style="margin-top:12px"></div>
-
-      <div class="row" style="margin-top:12px; gap:10px">
-        <input id="userEmail" type="email" placeholder="Ваш email (необязательно)" style="flex:1; min-width:200px" />
-        <button id="consultation" style="white-space:nowrap">📧 Запросить консультацию</button>
-      </div>
-
-      <div class="actions" style="margin-top:12px">
-        <button id="calc" class="primary" data-i="calc">Рассчитать</button>
-        <button id="exportCsv" data-i="exportCsv">Экспорт CSV</button>
-        <button id="exportJson" data-i="exportJson">Экспорт JSON</button>
-        <button id="printBtn" data-i="print">Печать / PDF</button>
-      </div>
-
-      <div id="results" style="display:none">
-        <div class="h2" id="resTitle">Итоги</div>
-        <div class="scores">
-          <div class="scorebox"><div class="muted" id="lblAll">Итоговый ESG</div><div class="score" id="scoreAll">–</div><div class="bar"><div id="barAll"></div></div></div>
-          <div class="scorebox"><div class="muted" id="lblE">E — Экология</div><div class="score" id="scoreE">–</div><div class="bar"><div id="barE"></div></div></div>
-          <div class="scorebox"><div class="muted" id="lblS">S — Социальное</div><div class="score" id="scoreS">–</div><div class="bar"><div id="barS"></div></div></div>
-          <div class="scorebox"><div class="muted" id="lblG">G — Управление</div><div class="score" id="scoreG">–</div><div class="bar"><div id="barG"></div></div></div>
-        </div>
-        <details style="margin-top:12px">
-          <summary id="recTitle">Рекомендации</summary>
-          <div id="advice" class="grid" style="margin-top:12px"></div>
-        </details>
-        <div class="footer" id="disclaimer">Отказ от ответственности: эта версия предназначена для быстрой ориентации и не заменяет детальный аудит.</div>
-
-        <details id="tests">
-          <summary>Dev tests</summary>
-          <pre id="testlog"></pre>
-        </details>
-      </div>
+    <div class="esg-row">
+      <select id="esgLang">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+      </select>
+      <button id="esgReset">Сброс</button>
     </div>
   </div>
 
+  <div class="esg-card">
+    <div class="esg-row" style="justify-content:space-between">
+      <div>
+        <div class="esg-h1" id="esgTitleMain">ESG Pathfinder — Самооценка</div>
+        <div class="esg-sub" id="esgSubtitle">30 вопросов (10E/10S/10G) · ~12 минут · RU/EN · расчёт локально в браузере</div>
+      </div>
+      <div class="esg-row">
+        <span id="esgPillPublic" class="esg-pill">Public</span>
+        <span id="esgPillPillars" class="esg-pill">Pillars: E • S • G</span>
+        <span id="esgPillScale" class="esg-pill">Scale: 0 / 0.5 / 1</span>
+      </div>
+    </div>
+
+    <div class="esg-row" style="margin-top:10px">
+      <input id="esgCompany" placeholder="Название компании" style="flex:1" />
+      <select id="esgSector" style="min-width:220px"></select>
+      <select id="esgYear" style="min-width:120px"></select>
+    </div>
+
+    <div id="esgSectorWarning" class="esg-warning" style="display:none">
+      <span id="esgSectorWarningText">⚠️ Пожалуйста, выберите отрасль для корректного взвешивания показателей ESG</span>
+    </div>
+
+    <div class="esg-grid" id="esgQuestions" style="margin-top:12px"></div>
+
+    <div class="esg-row" style="margin-top:12px; gap:10px">
+      <input id="esgUserEmail" type="email" placeholder="Ваш email (необязательно)" style="flex:1; min-width:200px" />
+      <button id="esgConsultation" style="white-space:nowrap">📧 Запросить консультацию</button>
+    </div>
+
+    <div class="esg-actions" style="margin-top:12px">
+      <button id="esgCalc" class="primary">Рассчитать</button>
+      <button id="esgExportCsv">Экспорт CSV</button>
+      <button id="esgExportJson">Экспорт JSON</button>
+      <button id="esgPrintBtn">Печать / PDF</button>
+    </div>
+
+    <div id="esgResults" style="display:none">
+      <div class="esg-h2" id="esgResTitle">Итоги</div>
+      <div class="esg-scores">
+        <div class="esg-scorebox"><div class="esg-muted" id="esgLblAll">Итоговый ESG</div><div class="esg-score" id="esgScoreAll">–</div><div class="esg-bar"><div id="esgBarAll"></div></div></div>
+        <div class="esg-scorebox"><div class="esg-muted" id="esgLblE">E — Экология</div><div class="esg-score" id="esgScoreE">–</div><div class="esg-bar"><div id="esgBarE"></div></div></div>
+        <div class="esg-scorebox"><div class="esg-muted" id="esgLblS">S — Социальное</div><div class="esg-score" id="esgScoreS">–</div><div class="esg-bar"><div id="esgBarS"></div></div></div>
+        <div class="esg-scorebox"><div class="esg-muted" id="esgLblG">G — Управление</div><div class="esg-score" id="esgScoreG">–</div><div class="esg-bar"><div id="esgBarG"></div></div></div>
+      </div>
+      <details style="margin-top:12px">
+        <summary id="esgRecTitle">Рекомендации</summary>
+        <div id="esgAdvice" class="esg-grid" style="margin-top:12px"></div>
+      </details>
+      <div class="esg-footer" id="esgDisclaimer">Отказ от ответственности: эта версия предназначена для быстрой ориентации и не заменяет детальный аудит.</div>
+    </div>
+  </div>
+  
+  <!-- Modal for consultation -->
+  <div id="esgConsultModal" class="esg-modal">
+    <div class="esg-modal-content">
+      <div class="esg-modal-header">
+        <div class="esg-modal-title" id="esgModalTitle">Запрос консультации</div>
+        <button class="esg-modal-close" id="esgModalClose">&times;</button>
+      </div>
+      <div class="esg-modal-body">
+        <p id="esgModalInstruction">Скопируйте текст ниже и отправьте на <strong>centre@imkon.net</strong></p>
+        <textarea id="esgEmailText" readonly></textarea>
+      </div>
+      <div class="esg-row" style="gap:10px">
+        <button id="esgCopyBtn" class="esg-copy-btn">📋 Копировать текст</button>
+        <a id="esgMailtoLink" class="esg-copy-btn" style="text-decoration:none; display:inline-block">📧 Открыть почту</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
-  // Text resources
   const L = {
     ru:{
       title:'ESG Pathfinder — Самооценка',
       subtitle:'30 вопросов (10E/10S/10G) · ~12 минут · RU/EN · расчёт локально в браузере',
       public:'Public', pillars:'Pillars: E • S • G', scale:'Scale: 0 / 0.5 / 1',
       companyPH:'Название компании', sectorPH:'Выберите отрасль',
-      qHeader:'Вопросы', res:'Итоги', rec:'Рекомендации', disclaimer:'Отказ от ответственности: эта версия предназначена для быстрой ориентации и не заменяет детальный аудит.',
+      qHeader:'Вопросы', res:'Итоги', rec:'Рекомендации', 
+      disclaimer:'Отказ от ответственности: эта версия предназначена для быстрой ориентации и не заменяет детальный аудит.',
       ELabel:'Экология (E)', SLabel:'Социальное (S)', GLabel:'Управление (G)',
       LAll:'Итоговый ESG', LE:'E — Экология', LS:'S — Социальное', LG:'G — Управление',
       yes:'Да', partial:'Частично', no:'Нет', see:'Где смотреть / обоснование:',
       calc:'Рассчитать', exportCsv:'Экспорт CSV', exportJson:'Экспорт JSON', print:'Печать / PDF',
       sectorWarning:'⚠️ Пожалуйста, выберите отрасль для корректного взвешивания показателей ESG',
-      emailPH:'Ваш email (необязательно)', consultation:'📧 Запросить консультацию'
+      emailPH:'Ваш email (необязательно)', consultation:'📧 Запросить консультацию',
+      modalTitle:'Запрос консультации', modalInstruction:'Скопируйте текст ниже и отправьте на', 
+      copyBtn:'📋 Копировать текст', openMail:'📧 Открыть почту', copied:'✓ Скопировано!'
     },
     en:{
       title:'ESG Pathfinder — Self-assessment',
       subtitle:'30 questions (10E/10S/10G) · ~12 minutes · RU/EN · computed locally in the browser',
       public:'Public', pillars:'Pillars: E • S • G', scale:'Scale: 0 / 0.5 / 1',
       companyPH:'Company name', sectorPH:'Choose a sector',
-      qHeader:'Questions', res:'Results', rec:'Recommendations', disclaimer:'Disclaimer: this lite version is for quick orientation and does not replace a full audit.',
+      qHeader:'Questions', res:'Results', rec:'Recommendations', 
+      disclaimer:'Disclaimer: this lite version is for quick orientation and does not replace a full audit.',
       ELabel:'Environment (E)', SLabel:'Social (S)', GLabel:'Governance (G)',
       LAll:'Overall ESG', LE:'E — Environment', LS:'S — Social', LG:'G — Governance',
       yes:'Yes', partial:'Partial', no:'No', see:'Where to look / rationale:',
       calc:'Calculate', exportCsv:'Export CSV', exportJson:'Export JSON', print:'Print / PDF',
       sectorWarning:'⚠️ Please select a sector for correct ESG weighting',
-      emailPH:'Your email (optional)', consultation:'📧 Request consultation'
+      emailPH:'Your email (optional)', consultation:'📧 Request consultation',
+      modalTitle:'Request consultation', modalInstruction:'Copy the text below and send to',
+      copyBtn:'📋 Copy text', openMail:'📧 Open email', copied:'✓ Copied!'
     }
   };
 
-  // Sector weights
-  const W = {banks:{E:.3,S:.35,G:.35}, manufacturing:{E:.45,S:.3,G:.25}, mining:{E:.5,S:.3,G:.2}, services:{E:.25,S:.35,G:.4}, other:{E:.33,S:.34,G:.33}};
+  const W = {
+    banks:{E:.3,S:.35,G:.35}, 
+    manufacturing:{E:.45,S:.3,G:.25}, 
+    mining:{E:.5,S:.3,G:.2}, 
+    services:{E:.25,S:.35,G:.4}, 
+    other:{E:.33,S:.34,G:.33}
+  };
 
-  // Questions (30)
   const Q = {
     ru:{
       E:[{code:'E1',q:'Есть ли инвентаризация прямых выбросов (Scope 1) за последний год?',tip:'Отчёт по ПГ/ISO 14064-1; топливные записи; база — GHG Protocol.'},{code:'E2',q:'Учтены косвенные выбросы от электроэнергии (Scope 2)?',tip:'Счета за электроэнергию, договоры/ППА; метод — Scope 2.'},{code:'E3',q:'Оценены материальные категории Scope 3?',tip:'ERP закупок, логистика, подрядчики; список 15 категорий.'},{code:'E4',q:'Есть цели и план сокращения с базовым годом?',tip:'Дорожная карта декарбонизации, SMART, протоколы Совета.'},{code:'E5',q:'Доля ВИЭ ≥20% или утвержден план?',tip:'Счётчики/счета, PPA, гарантии происхождения.'},{code:'E6',q:'Энергоаудит и KPI энергоинтенсивности?',tip:'EMS/SCADA, отчеты энергоаудита, KPI цехов.'},{code:'E7',q:'Учёт воды и цели по снижению/повторному использованию?',tip:'Счётчики, водные паспорта, техкарты.'},{code:'E8',q:'Учёт и управление отходами, доля переработки?',tip:'Реестр отходов, договоры с утилизаторами, МСУО.'},{code:'E9',q:'Оценка влияния на биоразнообразие/землепользование?',tip:'ОВОС/ESIA, геоданные, ООПТ.'},{code:'E10',q:'Мониторинг загрязнителей/шума и соответствие нормам?',tip:'Лаб. журналы, ПДВ/ПДС, производственный контроль.'}],
@@ -188,66 +490,100 @@
     }
   };
 
-  // Elements
-  const langSel = document.getElementById('lang');
-  const qWrap = document.getElementById('questions');
-  const calcBtn = document.getElementById('calc');
-  const resetBtn = document.getElementById('reset');
-  const exportCsvBtn = document.getElementById('exportCsv');
-  const exportJsonBtn = document.getElementById('exportJson');
-  const resultsEl = document.getElementById('results');
-  const sectorWarningEl = document.getElementById('sectorWarning');
-  const sectorWarningText = document.getElementById('sectorWarningText');
+  const langSel = document.getElementById('esgLang');
+  const qWrap = document.getElementById('esgQuestions');
+  const calcBtn = document.getElementById('esgCalc');
+  const resetBtn = document.getElementById('esgReset');
+  const exportCsvBtn = document.getElementById('esgExportCsv');
+  const exportJsonBtn = document.getElementById('esgExportJson');
+  const resultsEl = document.getElementById('esgResults');
+  const sectorWarningEl = document.getElementById('esgSectorWarning');
+  const sectorWarningText = document.getElementById('esgSectorWarningText');
 
   function fillYear(){
-    const yearSel = document.getElementById('year'); yearSel.innerHTML=''; const y=new Date().getFullYear();
-    for(let i=0;i<5;i++){ const o=document.createElement('option'); o.value=String(y-i); o.textContent=String(y-i); yearSel.appendChild(o); }
+    const yearSel = document.getElementById('esgYear'); 
+    yearSel.innerHTML=''; 
+    const y=new Date().getFullYear();
+    for(let i=0;i<5;i++){ 
+      const o=document.createElement('option'); 
+      o.value=String(y-i); 
+      o.textContent=String(y-i); 
+      yearSel.appendChild(o); 
+    }
   }
+
   function fillSector(lang){
-    const sector=document.getElementById('sector'); sector.innerHTML='';
-    const ph=document.createElement('option'); ph.value=''; ph.textContent=(lang==='ru'?'Выберите отрасль':'Choose a sector'); ph.disabled=true; ph.selected=true; sector.appendChild(ph);
-    const opts = (lang==='ru') ? [['banks','Банк / Финансы'],['manufacturing','Производство'],['mining','Горнодобывающая'],['services','Услуги / IT'],['other','Другое']] : [['banks','Banking / Finance'],['manufacturing','Manufacturing'],['mining','Mining'],['services','Services / IT'],['other','Other']];
-    opts.forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; sector.appendChild(o); });
+    const sector=document.getElementById('esgSector'); 
+    sector.innerHTML='';
+    const ph=document.createElement('option'); 
+    ph.value=''; 
+    ph.textContent=(lang==='ru'?'Выберите отрасль':'Choose a sector'); 
+    ph.disabled=true; 
+    ph.selected=true; 
+    sector.appendChild(ph);
+    const opts = (lang==='ru') ? 
+      [['banks','Банк / Финансы'],['manufacturing','Производство'],['mining','Горнодобывающая'],['services','Услуги / IT'],['other','Другое']] : 
+      [['banks','Banking / Finance'],['manufacturing','Manufacturing'],['mining','Mining'],['services','Services / IT'],['other','Other']];
+    opts.forEach(([v,t])=>{ 
+      const o=document.createElement('option'); 
+      o.value=v; 
+      o.textContent=t; 
+      sector.appendChild(o); 
+    });
   }
+
   function localize(lang){
     const t=L[lang];
-    document.getElementById('titleMain').textContent=t.title;
-    document.getElementById('subtitle').textContent=t.subtitle;
-    document.getElementById('pillPublic').textContent=t.public;
-    document.getElementById('pillPillars').textContent=t.pillars;
-    document.getElementById('pillScale').textContent=t.scale;
-    document.getElementById('resTitle').textContent=t.res;
-    document.getElementById('lblAll').textContent=t.LAll;
-    document.getElementById('lblE').textContent=t.LE;
-    document.getElementById('lblS').textContent=t.LS;
-    document.getElementById('lblG').textContent=t.LG;
-    document.getElementById('recTitle').textContent=t.rec;
-    document.getElementById('disclaimer').textContent=t.disclaimer;
-    document.getElementById('company').placeholder=t.companyPH;
-    document.getElementById('userEmail').placeholder=t.emailPH;
+    document.getElementById('esgTitleMain').textContent=t.title;
+    document.getElementById('esgSubtitle').textContent=t.subtitle;
+    document.getElementById('esgPillPublic').textContent=t.public;
+    document.getElementById('esgPillPillars').textContent=t.pillars;
+    document.getElementById('esgPillScale').textContent=t.scale;
+    document.getElementById('esgResTitle').textContent=t.res;
+    document.getElementById('esgLblAll').textContent=t.LAll;
+    document.getElementById('esgLblE').textContent=t.LE;
+    document.getElementById('esgLblS').textContent=t.LS;
+    document.getElementById('esgLblG').textContent=t.LG;
+    document.getElementById('esgRecTitle').textContent=t.rec;
+    document.getElementById('esgDisclaimer').textContent=t.disclaimer;
+    document.getElementById('esgCompany').placeholder=t.companyPH;
+    document.getElementById('esgUserEmail').placeholder=t.emailPH;
     sectorWarningText.textContent=t.sectorWarning;
-    // Buttons localization
-    const bCalc=document.getElementById('calc'); if(bCalc) bCalc.textContent=t.calc;
-    const bCsv=document.getElementById('exportCsv'); if(bCsv) bCsv.textContent=t.exportCsv;
-    const bJson=document.getElementById('exportJson'); if(bJson) bJson.textContent=t.exportJson;
-    const bPrint=document.getElementById('printBtn'); if(bPrint) bPrint.textContent=t.print;
-    const bConsult=document.getElementById('consultation'); if(bConsult) bConsult.textContent=t.consultation;
+    const bCalc=document.getElementById('esgCalc'); if(bCalc) bCalc.textContent=t.calc;
+    const bCsv=document.getElementById('esgExportCsv'); if(bCsv) bCsv.textContent=t.exportCsv;
+    const bJson=document.getElementById('esgExportJson'); if(bJson) bJson.textContent=t.exportJson;
+    const bPrint=document.getElementById('esgPrintBtn'); if(bPrint) bPrint.textContent=t.print;
+    const bConsult=document.getElementById('esgConsultation'); if(bConsult) bConsult.textContent=t.consultation;
+    document.getElementById('esgModalTitle').textContent=t.modalTitle;
+    const modalInstr = document.getElementById('esgModalInstruction');
+    modalInstr.innerHTML = t.modalInstruction + ' <strong>centre@imkon.net</strong>';
+    document.getElementById('esgCopyBtn').textContent=t.copyBtn;
+    document.getElementById('esgMailtoLink').textContent=t.openMail;
     fillSector(lang);
   }
+
   function renderQuestions(lang){
-    const t=L[lang]; qWrap.innerHTML='';
-    const qh=document.createElement('div'); qh.className='h2'; qh.textContent=t.qHeader; qWrap.appendChild(qh);
+    const t=L[lang]; 
+    qWrap.innerHTML='';
+    const qh=document.createElement('div'); 
+    qh.className='esg-h2'; 
+    qh.textContent=t.qHeader; 
+    qWrap.appendChild(qh);
     [['E',t.ELabel],['S',t.SLabel],['G',t.GLabel]].forEach(([pillar,label])=>{
-      const hdr=document.createElement('div'); hdr.className='h2'; hdr.textContent=label; qWrap.appendChild(hdr);
+      const hdr=document.createElement('div'); 
+      hdr.className='esg-h2'; 
+      hdr.textContent=label; 
+      qWrap.appendChild(hdr);
       Q[lang][pillar].forEach(item=>{
-        const div=document.createElement('div'); div.className='q';
+        const div=document.createElement('div'); 
+        div.className='esg-q';
         div.innerHTML = '<h4><span style="font-weight:700">'+item.code+'</span> — '+item.q+'</h4>'+
-          '<div class="row">'+
-          '<label class="badge"><input type="radio" name="'+item.code+'" value="1"> '+t.yes+'</label>'+
-          '<label class="badge warn"><input type="radio" name="'+item.code+'" value="0.5"> '+t.partial+'</label>'+
-          '<label class="badge bad"><input type="radio" name="'+item.code+'" value="0"> '+t.no+'</label>'+
+          '<div class="esg-row">'+
+          '<label class="esg-badge"><input type="radio" name="'+item.code+'" value="1"> '+t.yes+'</label>'+
+          '<label class="esg-badge warn"><input type="radio" name="'+item.code+'" value="0.5"> '+t.partial+'</label>'+
+          '<label class="esg-badge bad"><input type="radio" name="'+item.code+'" value="0"> '+t.no+'</label>'+
           '</div>'+
-          '<div class="muted" style="margin-top:6px"><strong>'+t.see+'</strong> '+item.tip+'</div>';
+          '<div class="esg-muted" style="margin-top:6px"><strong>'+t.see+'</strong> '+item.tip+'</div>';
         qWrap.appendChild(div);
       });
     });
@@ -255,43 +591,53 @@
 
   function calc(){
     const lang=langSel.value;
-    const sectorVal = document.getElementById('sector').value;
+    const sectorVal = document.getElementById('esgSector').value;
     
-    // Show warning if no sector selected
     if(!sectorVal){
       sectorWarningEl.style.display='block';
       setTimeout(()=>{ sectorWarningEl.style.display='none'; }, 5000);
     }
 
     const groups={E:[],S:[],G:[]};
-    ['E','S','G'].forEach(g=>{ Q[lang][g].forEach(it=>{ const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); groups[g].push(v); }); });
+    ['E','S','G'].forEach(g=>{ 
+      Q[lang][g].forEach(it=>{ 
+        const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); 
+        groups[g].push(v); 
+      }); 
+    });
     const avg = g=> groups[g].reduce((a,b)=>a+b,0)/groups[g].length;
     const sE=avg('E'), sS=avg('S'), sG=avg('G');
     const w = W[sectorVal || 'other'];
     const overall = (sE*w.E + sS*w.S + sG*w.G);
 
-    document.getElementById('scoreE').textContent=(sE*5).toFixed(1);
-    document.getElementById('scoreS').textContent=(sS*5).toFixed(1);
-    document.getElementById('scoreG').textContent=(sG*5).toFixed(1);
-    document.getElementById('scoreAll').textContent=(overall*5).toFixed(1);
-    document.getElementById('barE').style.width=(sE*100)+'%';
-    document.getElementById('barS').style.width=(sS*100)+'%';
-    document.getElementById('barG').style.width=(sG*100)+'%';
-    document.getElementById('barAll').style.width=(overall*100)+'%';
-    document.getElementById('barE').style.background = (sE>=.7?'#86efac':(sE>=.4?'#fde68a':'#fecaca'));
-    document.getElementById('barS').style.background = (sS>=.7?'#86efac':(sS>=.4?'#fde68a':'#fecaca'));
-    document.getElementById('barG').style.background = (sG>=.7?'#86efac':(sG>=.4?'#fde68a':'#fecaca'));
-    document.getElementById('barAll').style.background = (overall>=.7?'#86efac':(overall>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('esgScoreE').textContent=(sE*5).toFixed(1);
+    document.getElementById('esgScoreS').textContent=(sS*5).toFixed(1);
+    document.getElementById('esgScoreG').textContent=(sG*5).toFixed(1);
+    document.getElementById('esgScoreAll').textContent=(overall*5).toFixed(1);
+    document.getElementById('esgBarE').style.width=(sE*100)+'%';
+    document.getElementById('esgBarS').style.width=(sS*100)+'%';
+    document.getElementById('esgBarG').style.width=(sG*100)+'%';
+    document.getElementById('esgBarAll').style.width=(overall*100)+'%';
+    document.getElementById('esgBarE').style.background = (sE>=.7?'#86efac':(sE>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('esgBarS').style.background = (sS>=.7?'#86efac':(sS>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('esgBarG').style.background = (sG>=.7?'#86efac':(sG>=.4?'#fde68a':'#fecaca'));
+    document.getElementById('esgBarAll').style.background = (overall>=.7?'#86efac':(overall>=.4?'#fde68a':'#fecaca'));
 
-    const adv = document.getElementById('advice'); adv.innerHTML='';
+    const adv = document.getElementById('esgAdvice'); 
+    adv.innerHTML='';
 
-    // Quick summary
     const sums={E:0,S:0,G:0}, counts={E:Q[lang].E.length,S:Q[lang].S.length,G:Q[lang].G.length};
-    ['E','S','G'].forEach(g=>{ Q[lang][g].forEach(it=>{ const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); sums[g]+=v; }); });
+    ['E','S','G'].forEach(g=>{ 
+      Q[lang][g].forEach(it=>{ 
+        const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); 
+        sums[g]+=v; 
+      }); 
+    });
     const avgs=[[sums.E/counts.E,'E'],[sums.S/counts.S,'S'],[sums.G/counts.G,'G']].sort((a,b)=>a[0]-b[0]);
-    const weakest=avgs[0][1]; const missing = (counts.E+counts.S+counts.G) - (sums.E+sums.S+sums.G);
+    const weakest=avgs[0][1]; 
+    const missing = (counts.E+counts.S+counts.G) - (sums.E+sums.S+sums.G);
 
-    const sectorSel=document.getElementById('sector');
+    const sectorSel=document.getElementById('esgSector');
     const sectorText=(sectorSel.options[sectorSel.selectedIndex]||{}).text||'';
 
     const score5 = (x)=> (x*5).toFixed(1);
@@ -301,7 +647,6 @@
       ? `Сектор: ${sectorText||'—'} · Вес E/S/G: ${Math.round((w.E||0)*100)}%/${Math.round((w.S||0)*100)}%/${Math.round((w.G||0)*100)}%`
       : `Sector: ${sectorText||'—'} · Weights E/S/G: ${Math.round((w.E||0)*100)}%/${Math.round((w.S||0)*100)}%/${Math.round((w.G||0)*100)}%`;
 
-    // Top-3 weakest items where value < 1
     const weakItems=[];
     ['E','S','G'].forEach(g=>{
       Q[lang][g].forEach(it=>{
@@ -309,7 +654,7 @@
         if(v<1) weakItems.push({code:it.code, g, v, q:it.q});
       });
     });
-    weakItems.sort((a,b)=> a.v - b.v); // 0 first, then 0.5
+    weakItems.sort((a,b)=> a.v - b.v);
     const top3=weakItems.slice(0,3);
 
     const sumTitle = (lang==='ru'?'Короткий саммари':'Quick summary');
@@ -327,11 +672,14 @@
 
     const summaryHtml = `
       <strong>${sumTitle}</strong>
-      <div class="muted" style="white-space:pre-line">${desc}\n${sumBody}</div>
+      <div class="esg-muted" style="white-space:pre-line">${desc}\n${sumBody}</div>
       <div style="margin-top:8px"><strong>${priTitle}</strong>${priList}</div>
-      <div style="margin-top:8px"><strong>${nextTitle}</strong><div class="muted">${nextBody}</div></div>
+      <div style="margin-top:8px"><strong>${nextTitle}</strong><div class="esg-muted">${nextBody}</div></div>
     `;
-    const summary=document.createElement('div'); summary.className='q'; summary.innerHTML = summaryHtml; adv.appendChild(summary);
+    const summary=document.createElement('div'); 
+    summary.className='esg-q'; 
+    summary.innerHTML = summaryHtml; 
+    adv.appendChild(summary);
 
     function rec(code){
       const R = {
@@ -341,12 +689,21 @@
       return (lang==='ru'?R.ru:R.en)[code]||'';
     }
 
-    ['E','S','G'].forEach(g=>{ Q[lang][g].forEach(it=>{ const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); if(v<1){ const c=document.createElement('div'); c.className='q'; c.innerHTML = '<div class="badge">'+g+'</div> <strong>'+it.code+'</strong><div class="muted">'+rec(it.code)+'</div>'; adv.appendChild(c);} }); });
+    ['E','S','G'].forEach(g=>{ 
+      Q[lang][g].forEach(it=>{ 
+        const v=parseFloat((document.querySelector('input[name="'+it.code+'"]:checked')||{}).value||'0'); 
+        if(v<1){ 
+          const c=document.createElement('div'); 
+          c.className='esg-q'; 
+          c.innerHTML = '<div class="esg-badge">'+g+'</div> <strong>'+it.code+'</strong><div class="esg-muted">'+rec(it.code)+'</div>'; 
+          adv.appendChild(c);
+        } 
+      }); 
+    });
 
     resultsEl.style.display='block';
   }
 
-  // Helper for tests and export
   function buildCsv(rows){
     return rows.map(r=> r.map(x=> '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
   }
@@ -354,9 +711,9 @@
   function toCsv(){
     const lang=langSel.value; 
     const rows=[["Company","Year","Sector","Pillar","Code","Question","Answer (0-1)","Score (0-5)"]];
-    const company=(document.getElementById('company').value||''); 
-    const year=(document.getElementById('year').value||''); 
-    const sector=(document.getElementById('sector').value||'');
+    const company=(document.getElementById('esgCompany').value||''); 
+    const year=(document.getElementById('esgYear').value||''); 
+    const sector=(document.getElementById('esgSector').value||'');
     ['E','S','G'].forEach(g=>{ 
       Q[lang][g].forEach(it=>{ 
         const el=document.querySelector('input[name="'+it.code+'"]:checked'); 
@@ -365,7 +722,6 @@
       }); 
     });
     const csv = buildCsv(rows);
-    // Add BOM for proper Cyrillic encoding in Excel
     const blob = new Blob(['\uFEFF' + csv],{type:'text/csv;charset=utf-8;'}); 
     const a=document.createElement('a'); 
     a.href=URL.createObjectURL(blob); 
@@ -376,9 +732,9 @@
   function toJson(){
     const lang=langSel.value; 
     const data={
-      company:document.getElementById('company').value||'', 
-      year:document.getElementById('year').value||'', 
-      sector:document.getElementById('sector').value||'', 
+      company:document.getElementById('esgCompany').value||'', 
+      year:document.getElementById('esgYear').value||'', 
+      sector:document.getElementById('esgSector').value||'', 
       answers:[], 
       scores:{}
     };
@@ -396,56 +752,13 @@
     a.click();
   }
 
-  // Dev tests (run when URL ends with #dev)
-  function runTests(){
-    const log = [];
-    const ok = (name, cond)=> log.push((cond?'✔ ':'✖ ')+name);
-    try{
-      // Test 1: buildCsv newline correctness (FIXED)
-      const csv = buildCsv([['1','2'],['3','4']]);
-      ok('CSV has newline', csv.indexOf('\n')>0 && !/\n\n/.test(csv));
-      ok('CSV quotes escaped', csv.includes('"1"'));
-      
-      // Test 2: renderQuestions RU/EN without crash
-      renderQuestions('ru'); 
-      ok('renderQuestions ru', document.querySelectorAll('#questions .q').length>=30);
-      renderQuestions('en'); 
-      ok('renderQuestions en', document.querySelectorAll('#questions .q').length>=30);
-      
-      // Test 3: calc executes without selections and produces numbers
-      calc();
-      const allTxt=document.getElementById('scoreAll').textContent.trim();
-      ok('calc sets overall score', /^\d+(\.\d)?$/.test(allTxt));
-      
-      // Test 4: localization of buttons
-      localize('en'); 
-      ok('buttons localized EN', document.getElementById('calc').textContent.trim()==='Calculate');
-      localize('ru'); 
-      ok('buttons localized RU', document.getElementById('calc').textContent.trim()==='Рассчитать');
-      
-      // Test 5: CSV BOM for Cyrillic
-      ok('CSV export includes BOM', true); // Visual test - check file opens correctly in Excel
-      
-    }catch(e){ 
-      log.push('✖ exception: '+e.message); 
-    }
-    const pre=document.getElementById('testlog'); 
-    if(pre){ pre.textContent=log.join('\n'); }
-  }
-
-  // Init
   (function init(){ 
     fillYear(); 
     fillSector('ru'); 
     localize('ru'); 
     renderQuestions('ru'); 
-    if(location.hash.includes('dev')){ 
-      document.getElementById('tests').style.display='block'; 
-      runTests(); 
-    }
   })();
 
-  // Events
   langSel.addEventListener('change',()=>{ 
     const lang=langSel.value; 
     localize(lang); 
@@ -456,7 +769,7 @@
   exportCsvBtn.addEventListener('click', toCsv);
   exportJsonBtn.addEventListener('click', toJson);
   
-  const printBtn=document.getElementById('printBtn'); 
+  const printBtn=document.getElementById('esgPrintBtn'); 
   if(printBtn){ 
     printBtn.addEventListener('click', ()=>window.print()); 
   }
@@ -466,22 +779,27 @@
     renderQuestions(lang); 
     resultsEl.style.display='none';
     sectorWarningEl.style.display='none';
-    document.getElementById('company').value='';
-    document.getElementById('sector').selectedIndex=0;
+    document.getElementById('esgCompany').value='';
+    document.getElementById('esgSector').selectedIndex=0;
   });
 
-  // Consultation button
-  const consultBtn=document.getElementById('consultation');
-  if(consultBtn){
+  // Consultation button - show modal
+  const consultBtn=document.getElementById('esgConsultation');
+  const consultModal=document.getElementById('esgConsultModal');
+  const modalClose=document.getElementById('esgModalClose');
+  const copyBtn=document.getElementById('esgCopyBtn');
+  const emailTextArea=document.getElementById('esgEmailText');
+  const mailtoLink=document.getElementById('esgMailtoLink');
+  
+  if(consultBtn && consultModal){
     consultBtn.addEventListener('click', ()=>{
-      const company = document.getElementById('company').value || 'Не указано';
-      const email = document.getElementById('userEmail').value || 'Не указан';
-      const sector = document.getElementById('sector').value || 'Не выбрано';
-      const year = document.getElementById('year').value || new Date().getFullYear();
+      const company = document.getElementById('esgCompany').value || 'Не указано';
+      const email = document.getElementById('esgUserEmail').value || 'Не указан';
+      const sector = document.getElementById('esgSector').value || 'Не выбрано';
+      const year = document.getElementById('esgYear').value || new Date().getFullYear();
       const lang = langSel.value;
       
-      const subject = encodeURIComponent('Запрос консультации по ESG Pathfinder');
-      const body = encodeURIComponent(
+      const emailBody = 
         `Здравствуйте!\n\n` +
         `Прошу предоставить консультацию по результатам самооценки ESG.\n\n` +
         `Данные компании:\n` +
@@ -490,13 +808,46 @@
         `- Отрасль: ${sector}\n` +
         `- Год оценки: ${year}\n` +
         `- Язык интерфейса: ${lang}\n\n` +
-        `С уважением`
-      );
+        `С уважением`;
       
-      window.location.href = `mailto:centre@imkon.net?subject=${subject}&body=${body}`;
+      emailTextArea.value = emailBody;
+      
+      const subject = 'Запрос консультации по ESG Pathfinder';
+      const mailtoUrl = `mailto:centre@imkon.net?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+      mailtoLink.href = mailtoUrl;
+      
+      consultModal.classList.add('show');
+    });
+    
+    // Close modal
+    modalClose.addEventListener('click', ()=>{
+      consultModal.classList.remove('show');
+    });
+    
+    consultModal.addEventListener('click', (e)=>{
+      if(e.target === consultModal){
+        consultModal.classList.remove('show');
+      }
+    });
+    
+    // Copy to clipboard
+    copyBtn.addEventListener('click', async ()=>{
+      try {
+        await navigator.clipboard.writeText(emailTextArea.value);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✓ Скопировано!';
+        copyBtn.classList.add('copied');
+        setTimeout(()=>{
+          copyBtn.textContent = originalText;
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } catch(err) {
+        // Fallback for older browsers
+        emailTextArea.select();
+        document.execCommand('copy');
+        copyBtn.textContent = '✓ Скопировано!';
+      }
     });
   }
 })();
 </script>
-</body>
-</html>
