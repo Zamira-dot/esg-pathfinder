@@ -236,6 +236,56 @@
     color: #b77706;
   }
   
+  .esg-confirm-dialog {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .esg-confirm-dialog.show {
+    display: flex;
+  }
+  
+  .esg-confirm-content {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  
+  .esg-confirm-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  
+  .esg-confirm-message {
+    color: var(--ink);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  
+  .esg-confirm-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  
+  .esg-confirm-buttons button {
+    min-width: 100px;
+  }
+  
   .esg-footer {
     margin-top: 16px; 
     font-size: 12px; 
@@ -427,6 +477,18 @@
       </div>
     </div>
   </div>
+  
+  <!-- Confirm dialog for unanswered questions -->
+  <div id="esgConfirmDialog" class="esg-confirm-dialog">
+    <div class="esg-confirm-content">
+      <div class="esg-confirm-title" id="esgConfirmTitle">⚠️ Внимание</div>
+      <div class="esg-confirm-message" id="esgConfirmMessage"></div>
+      <div class="esg-confirm-buttons">
+        <button id="esgConfirmCancel">Отмена</button>
+        <button id="esgConfirmProceed" class="primary">Продолжить</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -446,7 +508,9 @@
       sectorWarning:'⚠️ Пожалуйста, выберите отрасль для корректного взвешивания показателей ESG',
       emailPH:'Ваш email (необязательно)', consultation:'📧 Запросить консультацию',
       modalTitle:'Запрос консультации', modalInstruction:'Скопируйте текст ниже и отправьте на', 
-      copyBtn:'📋 Копировать текст', openMail:'📧 Открыть почту', copied:'✓ Скопировано!'
+      copyBtn:'📋 Копировать текст', openMail:'📧 Открыть почту', copied:'✓ Скопировано!',
+      confirmTitle:'⚠️ Внимание', confirmMessage:'Вы не ответили на {count} из 30 вопросов. Они будут засчитаны как 0 баллов, что снизит итоговую оценку. Продолжить расчёт?',
+      confirmCancel:'Отмена', confirmProceed:'Продолжить'
     },
     en:{
       title:'ESG Pathfinder — Self-assessment',
@@ -462,7 +526,9 @@
       sectorWarning:'⚠️ Please select a sector for correct ESG weighting',
       emailPH:'Your email (optional)', consultation:'📧 Request consultation',
       modalTitle:'Request consultation', modalInstruction:'Copy the text below and send to',
-      copyBtn:'📋 Copy text', openMail:'📧 Open email', copied:'✓ Copied!'
+      copyBtn:'📋 Copy text', openMail:'📧 Open email', copied:'✓ Copied!',
+      confirmTitle:'⚠️ Warning', confirmMessage:'You have not answered {count} out of 30 questions. They will be counted as 0 points, which will lower your overall score. Continue with calculation?',
+      confirmCancel:'Cancel', confirmProceed:'Continue'
     }
   };
 
@@ -762,7 +828,70 @@
     renderQuestions(lang); 
   });
   
-  calcBtn.addEventListener('click', calc);
+  // Calculate button with unanswered questions check
+  calcBtn.addEventListener('click', ()=>{
+    const lang=langSel.value;
+    const t=L[lang];
+    
+    // Count unanswered questions
+    let totalQuestions = 0;
+    let answeredQuestions = 0;
+    
+    ['E','S','G'].forEach(g=>{ 
+      Q[lang][g].forEach(it=>{ 
+        totalQuestions++;
+        const answered = document.querySelector('input[name="'+it.code+'"]:checked');
+        if(answered) answeredQuestions++;
+      }); 
+    });
+    
+    const unanswered = totalQuestions - answeredQuestions;
+    
+    // If all questions answered, calculate directly
+    if(unanswered === 0){
+      calc();
+      return;
+    }
+    
+    // Show confirmation dialog
+    const confirmDialog = document.getElementById('esgConfirmDialog');
+    const confirmMessage = document.getElementById('esgConfirmMessage');
+    const confirmTitle = document.getElementById('esgConfirmTitle');
+    const confirmCancel = document.getElementById('esgConfirmCancel');
+    const confirmProceed = document.getElementById('esgConfirmProceed');
+    
+    confirmTitle.textContent = t.confirmTitle;
+    confirmMessage.textContent = t.confirmMessage.replace('{count}', unanswered);
+    confirmCancel.textContent = t.confirmCancel;
+    confirmProceed.textContent = t.confirmProceed;
+    
+    confirmDialog.classList.add('show');
+    
+    // Handle confirmation
+    const proceedHandler = ()=>{
+      confirmDialog.classList.remove('show');
+      calc();
+      confirmProceed.removeEventListener('click', proceedHandler);
+      confirmCancel.removeEventListener('click', cancelHandler);
+    };
+    
+    const cancelHandler = ()=>{
+      confirmDialog.classList.remove('show');
+      confirmProceed.removeEventListener('click', proceedHandler);
+      confirmCancel.removeEventListener('click', cancelHandler);
+    };
+    
+    confirmProceed.addEventListener('click', proceedHandler);
+    confirmCancel.addEventListener('click', cancelHandler);
+    
+    // Close on outside click
+    confirmDialog.addEventListener('click', (e)=>{
+      if(e.target === confirmDialog){
+        cancelHandler();
+      }
+    });
+  });
+  
   exportCsvBtn.addEventListener('click', toCsv);
   exportJsonBtn.addEventListener('click', toJson);
   
@@ -790,13 +919,13 @@
   
   if(consultBtn && consultModal){
     consultBtn.addEventListener('click', ()=>{
-      const company = document.getElementById('esgCompany').value || 'Не указано';
-      const email = document.getElementById('esgUserEmail').value || 'Не указан';
-      const sector = document.getElementById('esgSector').value || 'Не выбрано';
-      const year = document.getElementById('esgYear').value || new Date().getFullYear();
       const lang = langSel.value;
+      const company = document.getElementById('esgCompany').value || (lang==='ru'?'Не указано':'Not specified');
+      const email = document.getElementById('esgUserEmail').value || (lang==='ru'?'Не указан':'Not specified');
+      const sector = document.getElementById('esgSector').value || (lang==='ru'?'Не выбрано':'Not selected');
+      const year = document.getElementById('esgYear').value || new Date().getFullYear();
       
-      const emailBody = 
+      const emailBody = lang==='ru' ? 
         `Здравствуйте!\n\n` +
         `Прошу предоставить консультацию по результатам самооценки ESG.\n\n` +
         `Данные компании:\n` +
@@ -805,11 +934,21 @@
         `- Отрасль: ${sector}\n` +
         `- Год оценки: ${year}\n` +
         `- Язык интерфейса: ${lang}\n\n` +
-        `С уважением`;
+        `С уважением`
+        :
+        `Hello!\n\n` +
+        `I would like to request a consultation based on my ESG self-assessment results.\n\n` +
+        `Company information:\n` +
+        `- Company name: ${company}\n` +
+        `- Email: ${email}\n` +
+        `- Sector: ${sector}\n` +
+        `- Assessment year: ${year}\n` +
+        `- Interface language: ${lang}\n\n` +
+        `Best regards`;
       
       emailTextArea.value = emailBody;
       
-      const subject = 'Запрос консультации по ESG Pathfinder';
+      const subject = lang==='ru' ? 'Запрос консультации по ESG Pathfinder' : 'ESG Pathfinder Consultation Request';
       const mailtoUrl = `mailto:centre@imkon.net?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
       mailtoLink.href = mailtoUrl;
       
